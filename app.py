@@ -1,0 +1,144 @@
+import pinecone
+import logging
+import streamlit as st
+from sentence_transformers import SentenceTransformer
+from tqdm.auto import tqdm 
+
+index_id = "seo-youtube-search"
+pinecone_api = st.secrets["PINECONE_API"]
+
+@st.cache_resource
+def init_pinecone():
+    pinecone.init(
+    api_key=pinecone_api, 
+    environment = "us-east1-gcp"
+    )
+    return pinecone.Index(index_id)
+
+@st.cache_resource
+def init_sbert():
+    return SentenceTransformer('multi-qa-mpnet-base-dot-v1')
+
+def make_query(query, model, top_k=10, include_values=True, include_metadata=True, filter=None):
+    xq = model.encode([query]).tolist()
+    logging.info(f"Query:{query}")
+    attempt = 0 
+    while attempt < 3: 
+        try: 
+            xc = st.session_state.index.query(
+                xq, 
+                top_k=top_k,
+                include_values=include_values,
+                include_metadata=include_metadata,
+                filter=filter
+            )
+            matches = xc['matches']
+            break
+        except:
+            pinecone.init(api_key="905ef142-156e-4883-b1b7-9459ef60e3e4", environment = "us-east1-gcp")
+            st.session_state.index = pinecone.Index(index_id)
+            attempt += 1
+            matches = []
+    if len(matches) == 0:
+        logging.error("Query Failed")
+    return matches
+
+def card(thumbnail: str, title: str, urls: list, contexts: list, starts: list, ends: list):
+    meta = [(e,s,u,c) for e,s,u,c in zip(ends, starts, urls, contexts)]
+    meta.sort(reverse=False)
+    text_content = []
+    current_start = 0
+    current_end = 0
+    for end, start, url, contexts in meta:
+        time = start / 60 
+        mins = f"0{int(time)}"[-2:]
+        secs = f"0{int(round((time - int(mins))*60, 0))}"[-2:]
+        timestamp = f"{mins}:{secs}"
+        if start < current_end and start > current_start:
+            text_content[-1][0] = text_content[-1][0].split(contexts[:10])[0]
+            text_content.append([f"[{timestamp}] {contexts.capitalize()}", url])
+        else: 
+            text_content.append(["xLINEBREAKx", ""])
+            text_content.append([f"[{timestamp}] {contexts}", url])
+        current_start = start
+        current_end = end
+    html_text = ""
+    for text, url in text_content:
+        if text == "xLINEBREAKx":
+            html_text += "<br>"
+        else: 
+            html_text += f"<small><a href={url}>{text.strip()}... </a></small>"
+    html = f"""
+    <div class="container-fluid">
+        <table class"table-fluid">
+            <tr>
+                <th><a href={urls[0]}><img src={thumbnail} class="img-fluid" style="width: 192px; height: 106px"></a></th>
+                <th><h2>{title}</h2>
+            </tr>
+        </table>
+        <div>
+            <p>{html_text}</p>
+        </div>
+    </div>
+    <br><br>
+    """
+    return st.markdown(html, unsafe_allow_html=True)
+
+st.session_state.index = init_pinecone()
+model = init_sbert()
+
+st.title('Youtube SEO Q&A')
+
+query = st.text_input('Search!', '')
+
+with st.expander("Select Channels"):
+    channel_options = st.multiselect(
+        'Select Channels to Search',
+        ['GSC', 'SEMrush', 'Ahrefs', 'MOZ'],
+        ['GSC', 'SEMrush', 'Ahrefs', 'MOZ']
+    )
+
+if query != '':
+    matches = make_query(
+        query, model, top_k=10,
+        filter={
+            'channel': {'$in': channel_options}
+        }
+    )
+
+    results = {}
+    order =[]
+
+    for context in matches: 
+        video_id = context['metadata']['url'].split('/')[-1]
+        subtract_vid_id = 'watch?v='
+        video_id = video_id.replace(subtract_vid_id,'')
+        if video_id not in results: 
+            results[video_id] = {
+                'title': context['metadata']['title'],
+                'urls': [f"{context['metadata']['url']}&t={int(context['metadata']['start'])}"],
+                'contexts': [context['metadata']['text']],
+                'starts': [int(context['metadata']['start'])],
+                'ends': [int(context['metadata']['end'])]
+            }
+            order.append(video_id)
+        else: 
+            results[video_id]['urls'].append(
+                f"{context['metadata']['url']}&t={int(context['metadata']['start'])}"
+                )
+            results[video_id]['contexts'].append(
+                context['metadata']['text']
+                )
+            results[video_id]['starts'].append(int(context['metadata']['start']))
+            results[video_id]['ends'].append(int(context['metadata']['end']))
+    for video_id in order:
+        card(
+            thumbnail=f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg",
+            title=results[video_id]['title'],
+            urls=results[video_id]['urls'],
+            contexts=results[video_id]['contexts'],
+            starts=results[video_id]['starts'],
+            ends=results[video_id]['ends']
+        )
+
+
