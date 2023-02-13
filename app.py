@@ -89,9 +89,10 @@ model = init_sbert()
 
 st.title('Youtube SEO Q&A')
 
-st.text("There is an abundance of excellent resources for SEO professionals on YouTube, yet finding the information you need can be a challenge. Despite the wealth of informative videos, webinars, and conference replays offered by publishers like Google Search Console, Moz, Ahrefs, and SEMrush, sifting through hours of content to find the answer to a specific query can be time-consuming and inefficient.")
-
-st.text("Use this tool to efficiently find answers to complex SEO questions by semantically searching through an index of 1550 videos.")
+container = st.container()
+container.write("There is an abundance of excellent resources for SEO professionals on YouTube, yet finding the information you need can be a challenge. Despite the wealth of informative videos, webinars, and conference replays offered by publishers like Google Search Console, Moz, Ahrefs, and SEMrush, sifting through hours of content to find the answer to a specific query can be time-consuming and inefficient.")
+container.write("Use this tool to efficiently find answers to complex SEO questions by semantically searching through an index of 1550 videos.")
+container.write("Created by [Tyler Rouwhorst](https://www.linkedin.com/in/tyler-rouwhorst/)")
 
 st.info("Disclaimer: The index was built on Feb 8th, 2023 so any video published after this date by the included publishers will not be included. Additionally, searchers should be aware of the published date of a video result to ensure information on a specific topic is up to date.")
 
