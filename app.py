@@ -98,7 +98,7 @@ st.info("Disclaimer: The index was built on Feb 8th, 2023 so any video published
 
 query = st.text_input('Search!', '')
 
-with st.expander("Advanced Opotions"):
+with st.expander("Advanced Options"):
     channel_options = st.multiselect(
         'Select Channels to Search',
         ['GSC', 'SEMrush', 'Ahrefs', 'MOZ'],
