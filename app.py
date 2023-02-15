@@ -87,7 +87,7 @@ def card(thumbnail: str, title: str, urls: list, contexts: list, starts: list, e
 st.session_state.index = init_pinecone()
 model = init_sbert()
 
-st.title('A Better YouTube Search for SEOS')
+st.title('A Better YouTube Search for SEOs')
 
 container = st.container()
 container.write("There is an abundance of excellent resources for SEO professionals on YouTube, yet finding the information you need can be a challenge. Despite the wealth of informative videos, webinars, and conference replays offered by publishers like Google Search Console, Moz, Ahrefs, and SEMrush, sifting through hours of content to find the answer to a specific query can be time-consuming and inefficient.")
