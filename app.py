@@ -98,18 +98,24 @@ st.info("Disclaimer: The index was built on Feb 8th, 2023 so any video published
 
 query = st.text_input('Search!', '')
 
-with st.expander("Select Channels"):
+with st.expander("Advanced Opotions"):
     channel_options = st.multiselect(
         'Select Channels to Search',
         ['GSC', 'SEMrush', 'Ahrefs', 'MOZ'],
         ['GSC', 'SEMrush', 'Ahrefs', 'MOZ']
+    )
+    year_options = st.multiselect(
+        'Select Year of Publication to Search',
+        ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'],
+        ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023']
     )
 
 if query != '':
     matches = make_query(
         query, model, top_k=10,
         filter={
-            'channel': {'$in': channel_options}
+            'channel': {'$in': channel_options},
+            'publish': {'$in': year_options}
         }
     )
 
