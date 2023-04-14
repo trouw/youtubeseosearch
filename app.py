@@ -4,7 +4,7 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 from tqdm.auto import tqdm 
 
-index_id = "seo-youtube-search"
+index_id = "seo-youtube-search-index"
 pinecone_api = st.secrets["PINECONE_API"]
 
 @st.cache_resource
